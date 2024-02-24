@@ -1,8 +1,9 @@
 import time
 import colorama
-import pinecone
+from getpass import getpass
+import npyscreen
 import PyPDF2
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from model_cls import Model
 
 
 def extract_text_from_pdf(uploaded_file_path):
@@ -14,32 +15,58 @@ def extract_text_from_pdf(uploaded_file_path):
     return text
 
 
-class Model:
-    def __init__(self, model_name, api_key, index):
-        self.model = AutoModelForCausalLM.from_pretrained(model_name)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        pinecone.init(api_key=api_key)
-        self.pinecone_index = pinecone.Index(index)
+class UserInputApp(npyscreen.NPSAppManaged):
+    def main(self):
+        F = npyscreen.Form(name="Welcome to Solus! ")
+        self.file_widget = F.add(npyscreen.TitleFilenameCombo, name="File:", pady=2)
+        self.api_key_widget = F.add(npyscreen.TitlePassword, name="API Key:", pady=2)
+        self.index_widget = F.add(npyscreen.TitleText, name="Index:", pady=2)
+        self.F = F
+        F.edit()
 
-    def __call__(self, prompt):
-        return "This is a response"
+    def get_user_input(self):
+        return {'file_path': self.file_widget.value,
+                'api_key': self.api_key_widget.value,
+                'index': self.index_widget.value}
+
 
 def main():
     try:
-        print(colorama.Fore.MAGENTA + "Welcome to Solus! ", colorama.Style.RESET_ALL)
-        file = input("Enter the path of the PDF file: ")
+        app = UserInputApp()
+        app.run()
+        user_input = app.get_user_input()
+        print('Processing...')
+        time.sleep(0.5)
+        file = user_input['file_path']
         text = extract_text_from_pdf(file)
-        api_key = input("Enter the pinecone API key: ")
-        index = input("Enter the pinecone index: ")
-        print("Processing...")
-        model = Model("model", api_key, index)
+        api_key = user_input['api_key']
+        index = user_input['index']
+        # model = Model("model", api_key, index)
         while True:
-            prompt = input("Prompt: ")
-            response = model(prompt)
-            print("Response:", response)
+            prompt = input(colorama.Fore.GREEN + "Prompt: " + colorama.Style.RESET_ALL)
+            # response = model(prompt)
+            response = "This is a response"
+            print(colorama.Fore.CYAN + "Response:",
+                  colorama.Style.RESET_ALL, response)
+
     except KeyboardInterrupt:
         print("\nExiting...")
         time.sleep(0.5)
+    #     print()
+    #     file = input("Enter the path of the PDF file: ")
+    #     text = extract_text_from_pdf(file)
+    #     api_key = getpass("Enter the pinecone API key: ")
+    #     index = input("Enter the pinecone index: ")
+    #     print("Processing...")
+    #     model = Model("model", api_key, index)
+    #     while True:
+    #         prompt = input("Prompt: ")
+    #         response = model(prompt)
+    #         print("Response:", response)
+    # except KeyboardInterrupt:
+    #     print("\nExiting...")
+    #     time.sleep(0.5)
+
 
 if __name__ == "__main__":
     main()

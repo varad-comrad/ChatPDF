@@ -45,8 +45,8 @@ bnb_4bit_compute_dtype = "float16"
 bnb_4bit_quant_type = "nf4"
 use_nested_quant = False
 
-output_dir = "output"
-num_train_epochs = 7
+output_dir = "out"
+num_train_epochs = 15
 fp16 = True
 bf16 = False
 per_device_train_batch_size = 4
