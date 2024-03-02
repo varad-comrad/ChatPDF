@@ -2,12 +2,15 @@
 
 
 
-## About 
+## ABOUT
 
 SOLUS is a PDF query project built on top of [F.R.I.D.A.Y-v1](https://github.com/F-R-I-D-A-Y-Project/F.R.I.D.A.Y-v1), using [Langchain](https://www.langchain.com/) to create the pipeline for the Retrieval Augmented Generation (RAG)
 
 
-## How to use
+## HOW TO USE
+
+### Warning: If langchain still has support only for pydantic v1, skip to the next session
+
 To create and activate the Python virtual environment, use:
 
 - On Linux:
@@ -32,6 +35,32 @@ Alternatively, for Linux users, you can do:
 python setup.py
 ```
 and the "solus" alias will automatically run main.py from anywhere (as long as the dependencies are installed globally)
+
+## ISSUE
+
+Currently, langchain only supports pydantic v1. But gradio (one of the dependencies for training the model) requires pydantic v2. For as long as langchain don't fix their issues, the setting should go as follows:
+
+- On Linux:
+```shell
+    python -m venv env
+    source env/bin/activate
+    pip install -r requirements.txt
+    pip install -U pydantic
+    python model_gen.py
+    pip install pydantic==1.10.9
+    python main.py
+```
+
+- On Windows:
+```shell
+    python -m venv env
+    .\env\Scripts\activate
+    pip install -r requirements.txt
+    pip install -U pydantic
+    python model_gen.py
+    pip install pydantic==1.10.9
+    python main.py
+```
 
 ## About RAG
 
