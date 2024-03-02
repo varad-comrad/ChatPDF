@@ -3,6 +3,6 @@
 .vscode
 model
 friday_model
-output
+out*
 *ipynb
 CodeRelease2019.pdf

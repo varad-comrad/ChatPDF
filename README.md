@@ -27,6 +27,19 @@ Once the installation is complete, run:
 ```shell
 python main.py
 ```
+Alternatively, for Linux users, you can do:
+```shell
+python setup.py
+```
+and the "solus" alias will automatically run main.py from anywhere (as long as the dependencies are installed globally)
 
 ## About RAG
 
+Large Language Models nowadays are trained with a large corpus of text, providing them a lot of general information about everything. But, when it comes to factual knowledge, they may not be as accurate, since they were not trained with the data the user has. 
+       
+It's like a judge in a courtroom. Their decisions rely on both their general understanding of the law and access to specific legal codes and precedents.  
+
+Retrieval Augmented Generation (RAG) is a powerful technique that provides the necessary context to the LLM accurately answer you.
+
+
+For more information, check the [original paper](https://arxiv.org/abs/2005.11401)
