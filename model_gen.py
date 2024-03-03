@@ -18,7 +18,7 @@ from model_cls import colored_print
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
-model_name = sys.argv[1]
+model_name = input('Which model do you want to fine-tune? ') # 'gpt2-large'
 
 colored_print("Loading dataset...", colorama.ansi.Fore.GREEN)
 dataset = load_dataset('truthful_qa', 'generation')
@@ -145,9 +145,9 @@ base_model = AutoModelForCausalLM.from_pretrained(model_name,
 
 colored_print("Meging and unloading...", colorama.ansi.Fore.GREEN)
 base_model.resize_token_embeddings(len(tokenizer))
-final_model = PeftModel.from_pretrained(base_model, 'model')
+final_model = PeftModel.from_pretrained(base_model, 'base_model')
 final_model = final_model.merge_and_unload()
 time.sleep(1)
-final_model.save_pretrained('friday_model')
-tokenizer.save_pretrained('friday_model')
+final_model.save_pretrained(sys.argv[1])
+tokenizer.save_pretrained(sys.argv[1])
 colored_print("Done!", colorama.ansi.Fore.GREEN)
