@@ -7,7 +7,7 @@ from transformers import (AutoModelForCausalLM,
                           pipeline,
                           logging)
 from datasets import load_dataset
-import pandas as pd
+import sys
 import torch
 import os
 import time
@@ -18,22 +18,18 @@ from model_cls import colored_print
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
-model_name = 'gpt2-large'
+model_name = sys.argv[1]
 
 colored_print("Loading dataset...", colorama.ansi.Fore.GREEN)
 dataset = load_dataset('truthful_qa', 'generation')
 dataset['train'] = dataset['validation']
 del dataset['validation']
-dataset
-
 
 def concat_qa(example):
     return {"input_text": "<startofstring> " + example['question'] + " <bot>: " + example['best_answer'] + "<endofstring>"}
 
-
 colored_print("Preprocessing dataset...", colorama.ansi.Fore.GREEN)
 aux = dataset.map(concat_qa)
-aux
 time.sleep(1)
 colored_print("Dataset preprocessed!", colorama.ansi.Fore.GREEN)
 time.sleep(0.2)

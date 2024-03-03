@@ -1,4 +1,4 @@
-from transformers import Pipeline, pipeline
+from transformers import pipeline
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from langchain.vectorstores.docarray import DocArrayInMemorySearch
 from langchain.document_loaders.pdf import PyPDFLoader
@@ -8,7 +8,8 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
 from langchain_core.language_models.llms import LLM
 from langchain_core.callbacks.manager import CallbackManagerForLLMRun
-from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain.chat_models.openai import ChatOpenAI
 import colorama
 import os
@@ -18,11 +19,6 @@ import dotenv
 
 def colored_print(text, color):
     print(color + text + colorama.Style.RESET_ALL, flush=True)
-
-
-class ChatSolus(BaseChatModel):
-    pipeline: Pipeline
-    maxlen: int
 
 
 class Model:
@@ -66,7 +62,8 @@ class SOLUS:
                 max_tokens=self.maxlen
             )
         else:
-            self.model = ChatSolus()  # !!!!!!!!!!!!!!!!!
+            self.model = HuggingFacePipeline(
+                pipeline=self.model.pipeline)  # !!!!!!!!!!!!!!!!!
         return self._build_chain()
 
     def _build_chain(self) -> 'SOLUS':
@@ -80,8 +77,9 @@ class SOLUS:
         if self.use_openai:
             self.embeddings = OpenAIEmbeddings()
         else:
-            pass #!!!!!!!!!!!!!!!!!
-        self.db = DocArrayInMemorySearch.from_documents(self.docs, self.embeddings)
+            self.embeddings = HuggingFaceEmbeddings()
+        self.db = DocArrayInMemorySearch.from_documents(
+            self.docs, self.embeddings)
 
         self.retriever = self.db.as_retriever(
             search_type='similarity', search_kwargs={'k': self.k})
@@ -93,8 +91,8 @@ class SOLUS:
             return_source_documents=True,
             return_generated_question=True,
             memory=ConversationBufferMemory(
-                memory_key='chat_history', 
-                return_messages=True, 
+                memory_key='chat_history',
+                return_messages=True,
                 output_key='answer'
             ),
         )

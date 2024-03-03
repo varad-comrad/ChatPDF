@@ -5,6 +5,8 @@ import colorama
 import warnings
 import npyscreen
 import PyPDF2
+import platform
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from model_cls import SOLUS, Model, colored_print
 warnings.filterwarnings("ignore")
 
@@ -20,16 +22,16 @@ def extract_text_from_pdf(uploaded_file_path):
 
 class UserInputApp(npyscreen.NPSAppManaged):
     def main(self):
-        F = npyscreen.Form(name="Welcome to Solus! ")
-        self.file_widget = F.add(npyscreen.TitleFilenameCombo, name="File:", pady=2)
+        F = npyscreen.Form(name="Welcome to Solus!")
+        self.file_widget = F.add(npyscreen.TitleFilenameCombo, name="File:")
         self.use_custom = F.add(
-            npyscreen.Checkbox, name="Use Custom LLM:", value=False, pady=2)
+            npyscreen.TitleSelectOne, name="LLM to use:", values=["OpenAI", "Custom", 'HF'], max_height=5)
         self.model_path = F.add(
-            npyscreen.TitleText, name="Custom LLM Path:", value="friday_model", pady=2)
+            npyscreen.TitleText, name="LLM Path:")
         self.maxlen = F.add(npyscreen.TitleText,
-                            name="Maxlen:", value="100", pady=2)
+                            name="Maxlen:", value="100")
         self.temperature = F.add(npyscreen.TitleText,
-                                 name="Temperature:", value="0.0", pady=2)
+                                 name="Temperature:", value="0.0")
 
         self.F = F
         F.edit()
@@ -59,13 +61,14 @@ class Main:
         self.use_custom = user_input['use_custom']
         self.maxlen = int(user_input['maxlen'])
         self.temperature = float(user_input['temperature'])
-        if self.use_custom and not self._check_for_model():
-            colored_print('Model not found! Creating model...',
-                          colorama.ansi.Fore.GREEN)
-            time.sleep(0.2)
-            self._create_model()
+        if self.use_custom == 1 and not self._check_for_model():
+            aux = self.model_path
+            self.model_path = './' + self.model_path if platform.system() != 'Windows' else '.\\' + self.model_path
+            colored_print("Model not found! Creating model...", colorama.Fore.GREEN)
+            time.sleep(0.3)
+            self._create_model(aux)
         self.model = Model(self.model_path)
-        self.model = SOLUS(maxlen=self.maxlen, model=self.model, use_openai= not self.use_custom).build(
+        self.model = SOLUS(maxlen=self.maxlen, model=self.model, use_openai= self.use_custom == 0).build(
             file=self._file, chain_type='stuff', k=3, temperature=self.temperature
         )
 
@@ -74,8 +77,8 @@ class Main:
     def _check_for_model(self):
         return (pathlib.Path(__file__).parent / self.model_path).exists()
 
-    def _create_model(self, show_results=False): # show_results is a placeholder
-        subprocess.run('python model_gen.py', shell=True)
+    def _create_model(self, model_name: str):
+        subprocess.run(f'python model_gen.py {model_name}', shell=True)
 
     def prompt_loop(self):
         try:
