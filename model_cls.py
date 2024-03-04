@@ -1,5 +1,3 @@
-from transformers import pipeline
-from transformers import AutoModelForCausalLM, AutoTokenizer
 from langchain.vectorstores.docarray import DocArrayInMemorySearch
 from langchain.document_loaders.pdf import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -10,34 +8,16 @@ from langchain_core.language_models.llms import LLM
 from langchain_core.callbacks.manager import CallbackManagerForLLMRun
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain.chat_models.openai import ChatOpenAI
 import colorama
-import os
-import openai
-import dotenv
 
 
 def colored_print(text, color):
     print(color + text + colorama.Style.RESET_ALL, flush=True)
 
 
-class Model:
-    def __init__(self, model_path, num_workers=None, batch_size=None, max_length=None) -> None:
-        model = AutoModelForCausalLM.from_pretrained(model_path)
-        tokenizer = AutoTokenizer.from_pretrained(model_path)
-        self.pipeline = pipeline(
-            "text-generation", model=model, tokenizer=tokenizer)
-        self.num_workers = num_workers
-        self.batch_size = batch_size
-        self.max_length = max_length
-
-    def __call__(self, user_prompt):
-        return self.pipeline(user_prompt, num_workers=self.num_workers, batch_size=self.batch_size, max_length=self.max_length)
-
-
 class SOLUS:
-    def __init__(self, model, maxlen=None, num_workers=None, batch_size=None, use_openai: bool = False) -> None:
-        self.model = model
+    def __init__(self, pipeline, maxlen=None, num_workers=None, batch_size=None, use_openai: bool = False) -> None:
+        self.model = pipeline
         self.maxlen = maxlen
         self.num_workers = num_workers
         self.batch_size = batch_size
@@ -54,16 +34,6 @@ class SOLUS:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.temperature = temperature
-        if self.use_openai:
-            dotenv.load_dotenv()
-            openai.api_key = os.getenv('OPENAI_API_KEY')
-            self.model = ChatOpenAI(
-                model_name='gpt-3.5-turbo', temperature=self.temperature,
-                max_tokens=self.maxlen
-            )
-        else:
-            self.model = HuggingFacePipeline(
-                pipeline=self.model.pipeline)  # !!!!!!!!!!!!!!!!!
         return self._build_chain()
 
     def _build_chain(self) -> 'SOLUS':

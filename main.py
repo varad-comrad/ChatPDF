@@ -3,11 +3,17 @@ import subprocess
 import time
 import colorama
 import warnings
+from transformers import pipeline
+from transformers import AutoModelForCausalLM, AutoTokenizer
 import npyscreen
 import PyPDF2
 import platform
+import os
+from langchain.chat_models.openai import ChatOpenAI
+import openai
+import dotenv
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from model_cls import SOLUS, Model, colored_print
+from model_cls import SOLUS, colored_print
 warnings.filterwarnings("ignore")
 
 
@@ -61,14 +67,25 @@ class Main:
         self.use_custom = user_input['use_custom']
         self.maxlen = int(user_input['maxlen'])
         self.temperature = float(user_input['temperature'])
-        if self.use_custom == 1 and not self._check_for_model():
+        if self.use_custom[0] == 1 and not self._check_for_model():
             aux = self.model_path
             self.model_path = './' + self.model_path if platform.system() != 'Windows' else '.\\' + self.model_path
             colored_print("Model not found! Creating model...", colorama.Fore.GREEN)
             time.sleep(0.3)
             self._create_model(aux)
-        self.model = Model(self.model_path)
-        self.model = SOLUS(maxlen=self.maxlen, model=self.model, use_openai= self.use_custom == 0).build(
+        use_openai= self.use_custom[0] == 0
+        if use_openai:
+            dotenv.load_dotenv()
+            openai.api_key = os.getenv('OPENAI_API_KEY')
+            self.pipeline = ChatOpenAI(
+                model_name='gpt-3.5-turbo', temperature=self.temperature, max_tokens=self.maxlen)
+        else:
+            model = AutoModelForCausalLM.from_pretrained(self.model_path)
+            tokenizer = AutoTokenizer.from_pretrained(self.model_path)
+            self.pipeline = pipeline(
+                "text-generation", model=model, tokenizer=tokenizer)
+
+        self.model = SOLUS(maxlen=self.maxlen, pipeline=self.pipeline, use_openai=use_openai).build(
             file=self._file, chain_type='stuff', k=3, temperature=self.temperature
         )
 
