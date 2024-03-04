@@ -13,6 +13,7 @@ from langchain.chat_models.openai import ChatOpenAI
 import openai
 import dotenv
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from model_cls import SOLUS, colored_print
 warnings.filterwarnings("ignore")
 
@@ -43,19 +44,18 @@ class UserInputApp(npyscreen.NPSAppManaged):
         F.edit()
 
     def get_user_input(self):
-        return  {
-                    'file_path': self.file_widget.value,
-                    'model_path': self.model_path.value,
-                    'use_custom': self.use_custom.value,
-                    'maxlen': self.maxlen.value,
-                    'temperature': self.temperature.value
-                }
+        return {
+            'file_path': self.file_widget.value,
+            'model_path': self.model_path.value,
+            'use_custom': self.use_custom.value,
+            'maxlen': self.maxlen.value,
+            'temperature': self.temperature.value
+        }
 
 
 class Main:
     def __init__(self) -> None:
         self.app = UserInputApp()
-
 
     def run(self):
         self.app.run()
@@ -69,11 +69,13 @@ class Main:
         self.temperature = float(user_input['temperature'])
         if self.use_custom[0] == 1 and not self._check_for_model():
             aux = self.model_path
-            self.model_path = './' + self.model_path if platform.system() != 'Windows' else '.\\' + self.model_path
-            colored_print("Model not found! Creating model...", colorama.Fore.GREEN)
+            self.model_path = './' + self.model_path if platform.system() != 'Windows' else '.\\' + \
+                self.model_path
+            colored_print("Model not found! Creating model...",
+                          colorama.Fore.GREEN)
             time.sleep(0.3)
             self._create_model(aux)
-        use_openai= self.use_custom[0] == 0
+        use_openai = self.use_custom[0] == 0
         if use_openai:
             dotenv.load_dotenv()
             openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -82,8 +84,8 @@ class Main:
         else:
             model = AutoModelForCausalLM.from_pretrained(self.model_path)
             tokenizer = AutoTokenizer.from_pretrained(self.model_path)
-            self.pipeline = pipeline(
-                "text-generation", model=model, tokenizer=tokenizer)
+            self.pipeline = HuggingFacePipeline(pipeline=pipeline(
+                "text-generation", model=model, tokenizer=tokenizer, max_new_tokens=self.maxlen))
 
         self.model = SOLUS(maxlen=self.maxlen, pipeline=self.pipeline, use_openai=use_openai).build(
             file=self._file, chain_type='stuff', k=3, temperature=self.temperature
@@ -100,9 +102,11 @@ class Main:
     def prompt_loop(self):
         try:
             while True:
-                prompt = input(colorama.Fore.GREEN + "You: " + colorama.Style.RESET_ALL)
+                prompt = input(colorama.Fore.GREEN + "You: " +
+                               colorama.Style.RESET_ALL)
                 response = self.model(prompt)
-                print(colorama.Fore.CYAN + "Solus: ", colorama.Style.RESET_ALL, response)
+                print(colorama.Fore.CYAN + "Solus: ",
+                      colorama.Style.RESET_ALL, response)
         except KeyboardInterrupt:
             exit_msg = colorama.ansi.Fore.RED + "\nExiting"
             dot_msg = "."
@@ -112,6 +116,7 @@ class Main:
                 time.sleep(0.3)
                 print(dot_msg, end="", flush=True)
             print(colorama.Style.RESET_ALL)
+
 
 if __name__ == "__main__":
     Main().run()

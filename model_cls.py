@@ -6,7 +6,6 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
 from langchain_core.language_models.llms import LLM
 from langchain_core.callbacks.manager import CallbackManagerForLLMRun
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain_community.embeddings import HuggingFaceEmbeddings
 import colorama
 
@@ -25,6 +24,7 @@ class SOLUS:
 
     def __call__(self, query):
         result = self.qa({"question": query})
+        # print(result)
         return result['answer']
 
     def build(self, file, chain_type, k, chunk_size=1000, chunk_overlap=150, temperature=0) -> 'SOLUS':
